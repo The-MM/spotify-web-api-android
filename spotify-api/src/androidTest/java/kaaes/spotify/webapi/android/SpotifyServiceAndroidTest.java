@@ -1,7 +1,11 @@
 package kaaes.spotify.webapi.android;
 
+import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
 import android.os.Bundle;
-import android.support.test.InstrumentationRegistry;
+
+import androidx.test.InstrumentationRegistry;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -33,9 +37,6 @@ import kaaes.spotify.webapi.android.models.PlaylistSimple;
 import kaaes.spotify.webapi.android.models.Recommendations;
 import kaaes.spotify.webapi.android.models.Track;
 import kaaes.spotify.webapi.android.models.Tracks;
-
-import static junit.framework.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 /**
  * These are functional tests that make actual requests to the Spotify Web API endpoints and

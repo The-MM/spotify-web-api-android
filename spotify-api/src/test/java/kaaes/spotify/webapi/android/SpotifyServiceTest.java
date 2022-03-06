@@ -111,9 +111,9 @@ public class SpotifyServiceTest {
         Track fixture = mGson.fromJson(body, Track.class);
 
         Response response = TestUtils.getResponseFromModel(fixture, Track.class);
-        when(mMockClient.execute(argThat(new MatchesId(fixture.id)))).thenReturn(response);
+        when(mMockClient.execute(argThat(new MatchesId(fixture.getId())))).thenReturn(response);
 
-        Track track = mSpotifyService.getTrack(fixture.id);
+        Track track = mSpotifyService.getTrack(fixture.getId());
         this.compareJSONWithoutNulls(body, track);
     }
 
@@ -123,11 +123,11 @@ public class SpotifyServiceTest {
         Tracks fixture = mGson.fromJson(body, Tracks.class);
 
         String ids = "";
-        for (int i = 0; i < fixture.tracks.size(); i++) {
+        for (int i = 0; i < fixture.getTracks().size(); i++) {
             if (i > 0) {
                 ids += ",";
             }
-            ids += fixture.tracks.get(i).id;
+            ids += fixture.getTracks().get(i).getId();
         }
 
         Response response = TestUtils.getResponseFromModel(fixture, Tracks.class);
@@ -143,9 +143,9 @@ public class SpotifyServiceTest {
         Album fixture = mGson.fromJson(body, Album.class);
 
         Response response = TestUtils.getResponseFromModel(fixture, Album.class);
-        when(mMockClient.execute(argThat(new MatchesId(fixture.id)))).thenReturn(response);
+        when(mMockClient.execute(argThat(new MatchesId(fixture.getId())))).thenReturn(response);
 
-        Album album = mSpotifyService.getAlbum(fixture.id);
+        Album album = mSpotifyService.getAlbum(fixture.getId());
         this.compareJSONWithoutNulls(body, album);
     }
 
@@ -155,11 +155,11 @@ public class SpotifyServiceTest {
         Albums fixture = mGson.fromJson(body, Albums.class);
 
         String ids = "";
-        for (int i = 0; i < fixture.albums.size(); i++) {
+        for (int i = 0; i < fixture.getAlbums().size(); i++) {
             if (i > 0) {
                 ids += ",";
             }
-            ids += fixture.albums.get(i).id;
+            ids += fixture.getAlbums().get(i).getId();
         }
 
         Response response = TestUtils.getResponseFromModel(fixture, Albums.class);
@@ -175,9 +175,9 @@ public class SpotifyServiceTest {
         Artist fixture = mGson.fromJson(body, Artist.class);
 
         Response response = TestUtils.getResponseFromModel(fixture, Artist.class);
-        when(mMockClient.execute(argThat(new MatchesId(fixture.id)))).thenReturn(response);
+        when(mMockClient.execute(argThat(new MatchesId(fixture.getId())))).thenReturn(response);
 
-        Artist artist = mSpotifyService.getArtist(fixture.id);
+        Artist artist = mSpotifyService.getArtist(fixture.getId());
         this.compareJSONWithoutNulls(body, artist);
     }
 
@@ -187,11 +187,11 @@ public class SpotifyServiceTest {
         Artists fixture = mGson.fromJson(body, Artists.class);
 
         String ids = "";
-        for (int i = 0; i < fixture.artists.size(); i++) {
+        for (int i = 0; i < fixture.getArtists().size(); i++) {
             if (i > 0) {
                 ids += ",";
             }
-            ids += fixture.artists.get(i).id;
+            ids += fixture.getArtists().get(i).getId();
         }
 
         Response response = TestUtils.getResponseFromModel(fixture, Artists.class);
@@ -227,7 +227,7 @@ public class SpotifyServiceTest {
         Response response = TestUtils.getResponseFromModel(fixture, Playlist.class);
         when(mMockClient.execute(isA(Request.class))).thenReturn(response);
 
-        Playlist playlist = mSpotifyService.getPlaylist(fixture.owner.id, fixture.id);
+        Playlist playlist = mSpotifyService.getPlaylist(fixture.getOwner().getId(), fixture.getId());
         compareJSONWithoutNulls(body, playlist);
     }
 
@@ -320,9 +320,9 @@ public class SpotifyServiceTest {
         UserPublic fixture = mGson.fromJson(body, UserPublic.class);
 
         Response response = TestUtils.getResponseFromModel(fixture, UserPublic.class);
-        when(mMockClient.execute(argThat(new MatchesId(fixture.id)))).thenReturn(response);
+        when(mMockClient.execute(argThat(new MatchesId(fixture.getId())))).thenReturn(response);
 
-        UserPublic userSimple = mSpotifyService.getUser(fixture.id);
+        UserPublic userSimple = mSpotifyService.getUser(fixture.getId());
         this.compareJSONWithoutNulls(body, userSimple);
     }
 
@@ -484,7 +484,7 @@ public class SpotifyServiceTest {
         final String requestPlaylist = TestUtils.readTestData("playlist-response.json");
         final Playlist requestFixture = mGson.fromJson(requestPlaylist, Playlist.class);
 
-        final Boolean[] result = mSpotifyService.areFollowingPlaylist(requestFixture.owner.id, requestFixture.id, userIds);
+        final Boolean[] result = mSpotifyService.areFollowingPlaylist(requestFixture.getOwner().getId(), requestFixture.getId(), userIds);
         this.compareJSONWithoutNulls(body, result);
     }
 
@@ -697,13 +697,9 @@ public class SpotifyServiceTest {
         final String trackUri1 = "spotify:track:76lT30VRv09h5MQp5snmsb";
         final String trackUri2 = "spotify:track:2KCmalBTv3SiYxvpKrXmr5";
 
-        TracksToRemove ttr = new TracksToRemove();
-        TrackToRemove trackObject1 = new TrackToRemove();
-        trackObject1.uri = trackUri1;
-        TrackToRemove trackObject2 = new TrackToRemove();
-        trackObject2.uri = trackUri2;
-
-        ttr.tracks = Arrays.asList(trackObject1, trackObject2);
+        TrackToRemove trackObject1 = new TrackToRemove(trackUri1);
+        TrackToRemove trackObject2 = new TrackToRemove(trackUri2);
+        TracksToRemove ttr = new TracksToRemove(Arrays.asList(trackObject1, trackObject2));
 
         when(mMockClient.execute(argThat(new ArgumentMatcher<Request>() {
             @Override
