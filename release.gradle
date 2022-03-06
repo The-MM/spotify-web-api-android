@@ -9,7 +9,7 @@ android.libraryVariants.all { variant ->
 
         source = variant.javaCompile.source
         ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
-        classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar)
+        doFirst { classpath = files(variant.javaCompile.classpath.files) + files(ext.androidJar) }
     }
 }
 
@@ -19,7 +19,7 @@ android.libraryVariants.all { variant ->
         def outputFile = output.outputFile
         if (outputFile != null && outputFile.name.endsWith('.aar')) {
             def fileName = "${BASE_NAME}-${version}.aar"
-            output.outputFile = new File(outputFile.parent, fileName)
+            output.outputFileName = new File("release", fileName)
         }
     }
 }
@@ -28,7 +28,7 @@ android.libraryVariants.all { variant ->
 apply plugin: 'jacoco'
 
 jacoco {
-    toolVersion = "0.7.1.201405082137"
+    toolVersion = "0.8.7"
 }
 
 def coverageSourceDirs = ['src/main/java' ]
@@ -37,18 +37,18 @@ task jacocoTestReport(type:JacocoReport, dependsOn: "test") {
     group = "Reporting"
     description = "Generate Jacoco coverage reports"
 
-    classDirectories = fileTree(
+    classDirectories.setFrom(fileTree(
             dir: 'build/intermediates/classes/debug',
             excludes: ['**/R.class',
                        '**/R$*.class',
                        '**/*$ViewInjector*.*',
                        '**/BuildConfig.*',
                        '**/Manifest*.*']
-    )
+    ))
 
-    additionalSourceDirs = files(coverageSourceDirs)
-    sourceDirectories = files(coverageSourceDirs)
-    executionData = files('build/jacoco/testDebug.exec')
+    additionalSourceDirs.setFrom(files(coverageSourceDirs))
+    sourceDirectories.setFrom(files(coverageSourceDirs))
+    executionData.setFrom(files('build/jacoco/testDebug.exec'))
 
     reports {
         xml.enabled = true
