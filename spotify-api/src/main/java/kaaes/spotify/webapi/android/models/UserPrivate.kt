@@ -12,4 +12,3 @@ data class UserPrivate(
     val email: String? = null,
     val product: String? = null,
 ) : UserPublic()
-

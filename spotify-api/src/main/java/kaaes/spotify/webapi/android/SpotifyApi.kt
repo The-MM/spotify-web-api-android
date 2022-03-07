@@ -1,9 +1,10 @@
 package kaaes.spotify.webapi.android
 
-import retrofit.RequestInterceptor
-import retrofit.RequestInterceptor.RequestFacade
-import retrofit.RestAdapter
-import retrofit.android.MainThreadExecutor
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
+import okhttp3.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
@@ -21,56 +22,39 @@ import java.util.concurrent.Executors
  * SpotifyService spotify = wrapper.getService();
  *
  * Album album = spotify.getAlbum("2dIGnmEIy1WZIcZCFSj6i8");
+ *
+ * @constructor Create instance of SpotifyApi with given executors.
+ * @param httpExecutor executor for http request. If null is passed then a new single thread executor is used.
+ * @param callbackExecutor executor for callbacks. If null is passed then the same thread that created the instance is used.
  */
-class SpotifyApi {
-    /**
-     * The request interceptor that will add the header with OAuth
-     * token to every request made with the wrapper.
-     */
-    private inner class WebApiAuthenticator : RequestInterceptor {
-        override fun intercept(request: RequestFacade) {
-            if (accessToken != null) {
-                request.addHeader("Authorization", "Bearer $accessToken")
-            }
-        }
-    }
+class SpotifyApi(httpExecutor: Executor? = null, callbackExecutor: Executor? = null) {
 
     /**
-     * @return The SpotifyApi instance
+     * The SpotifyApi instance
      */
     val service: SpotifyService
     private var accessToken: String? = null
 
-    /**
-     * Create instance of SpotifyApi with given executors.
-     *
-     * @param httpExecutor executor for http request. Cannot be null.
-     * @param callbackExecutor executor for callbacks. If null is passed than the same
-     * thread that created the instance is used.
-     */
-    constructor(httpExecutor: Executor, callbackExecutor: Executor) {
-        service = init(httpExecutor, callbackExecutor)
+    init {
+        val httpExec = httpExecutor ?: Executors.newSingleThreadExecutor()
+        val callbackExec = callbackExecutor ?: MainThreadExecutor()
+        service = init(httpExec, callbackExec)
     }
 
-    private fun init(httpExecutor: Executor, callbackExecutor: Executor): SpotifyService {
-        val restAdapter = RestAdapter.Builder()
-            .setLogLevel(RestAdapter.LogLevel.BASIC)
-            .setExecutors(httpExecutor, callbackExecutor)
-            .setEndpoint(SPOTIFY_WEB_API_ENDPOINT)
-            .setRequestInterceptor(WebApiAuthenticator())
+    private fun initOkHttp(httpExecutor: Executor) =
+        OkHttpClient.Builder()
+            .addInterceptor(WebApiAuthenticator())
+            .dispatcher(httpExecutor)
             .build()
-        return restAdapter.create(SpotifyService::class.java)
-    }
 
-    /**
-     * New instance of SpotifyApi,
-     * with single thread executor both for http and callbacks.
-     */
-    constructor() {
-        val httpExecutor: Executor = Executors.newSingleThreadExecutor()
-        val callbackExecutor = MainThreadExecutor()
-        service = init(httpExecutor, callbackExecutor)
-    }
+    private fun init(httpExecutor: Executor, callbackExecutor: Executor): SpotifyService =
+        Retrofit.Builder()
+            .client(initOkHttp(httpExecutor))
+            .callbackExecutor(callbackExecutor)
+            .addConverterFactory(GsonConverterFactory.create())
+            .baseUrl(SPOTIFY_WEB_API_ENDPOINT)
+            .build()
+            .create(SpotifyService::class.java)
 
     /**
      * Sets access token on the wrapper.
@@ -80,15 +64,29 @@ class SpotifyApi {
      * @param accessToken The token to set on the wrapper.
      * @return The instance of the wrapper.
      */
-    fun setAccessToken(accessToken: String?): SpotifyApi {
-        this.accessToken = accessToken
-        return this
+    fun setAccessToken(accessToken: String?): SpotifyApi = also { this.accessToken = accessToken }
+
+    /**
+     * The request interceptor that will add the header with OAuth
+     * token to every request made with the wrapper.
+     */
+    private inner class WebApiAuthenticator : Interceptor {
+        override fun intercept(chain: Interceptor.Chain): Response {
+            val request = chain.request().newBuilder()
+                .apply {
+                    if (accessToken != null) {
+                        addHeader("Authorization", "Bearer $accessToken")
+                    }
+                }
+                .build()
+            return chain.proceed(request)
+        }
     }
 
     companion object {
         /**
          * Main Spotify Web API endpoint
          */
-        const val SPOTIFY_WEB_API_ENDPOINT = "https://api.spotify.com/v1"
+        const val SPOTIFY_WEB_API_ENDPOINT = "https://api.spotify.com/v1/"
     }
 }

@@ -18,3 +18,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface DELETEWITHBODY {
     String value();
 }
+
+//Replace
+// @DELETE("my/path")
+//By
+//@HTTP(method = "DELETE", path = "/my/path", hasBody = true)
